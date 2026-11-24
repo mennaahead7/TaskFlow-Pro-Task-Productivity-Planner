@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنجاز - TaskFlow Pro | مخطط المهام والإنتاجية اليومية</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cairo (Arabic) & Inter (English) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        arabic: ['Cairo', 'sans-serif'],
+                        english: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        emeraldBrand: {
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html[dir="rtl"] body {
+            font-family: 'Cairo', sans-serif;
+        }
+        html[dir="ltr"] body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Smooth Progress Ring Transition */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Task Entry & Check Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .task-card {
+            animation: slideIn 0.25s ease-out;
+        }
+        .task-card.dragging {
+            opacity: 0.5;
+            border: 2px dashed #3b82f6;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-300 antialiased selection:bg-primary-500 selection:text-white">
+
+    <!-- ==================== TOP APPLICATION HEADER ==================== -->
+    <header class="sticky top-0 z-30 backdrop-blur-xl bg-white/85 dark:bg-slate-900/85 border-b border-slate-200/80 dark:border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between gap-4">
+            <!-- Brand Identity -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary-600 to-emeraldBrand-500 text-white flex items-center justify-center shadow-lg shadow-primary-600/20">
+                    <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 data-i18n="appTitle" class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-none">إنجاز</h1>
+                        <span class="px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-600 dark:text-primary-400 text-[11px] font-bold tracking-wide">TaskFlow Pro</span>
+                    </div>
+                    <p id="current-date-display" class="text-xs text-slate-500 dark:text-slate-400 mt-1"></p>
+                </div>
+            </div>
+
+            <!-- Action Controls: Language Switcher & Theme Toggle -->
+            <div class="flex items-center gap-2.5">
+                <button onclick="toggleLanguage()" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-primary-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95">
+                    <i data-lucide="languages" class="w-4 h-4 text-primary-500"></i>
+                    <span id="lang-btn-text">English</span>
+                </button>
+
+                <button onclick="toggleTheme()" aria-label="Toggle Theme" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-primary-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-amber-400 transition-all active:scale-95">
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                    <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN WORKSPACE GRID ==================== -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+
+            <!-- ==================== LEFT / START SIDEBAR: DASHBOARD & POMODORO ==================== -->
+            <aside class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+                
+                <!-- 1. Live Productivity Stats Card -->
+                <section class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <h2 data-i18n="statsTitle" class="font-bold text-base sm:text-lg text-slate-900 dark:text-white">مؤشر الإنجاز اليومي</h2>
+                            <p data-i18n="statsSub" class="text-xs text-slate-500 dark:text-slate-400">تتبع تقدمك لحظة بلحظة</p>
+                        </div>
+                        <span id="motivation-badge" class="px-3 py-1 rounded-full bg-emeraldBrand-500/10 text-emeraldBrand-600 dark:text-emeraldBrand-400 text-xs font-bold">
+                            🚀 بداية قوية
+                        </span>
+                    </div>
+
+                    <!-- Circular Progress Ring & Counters -->
+                    <div class="flex items-center gap-6">
+                        <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                            <svg class="w-24 h-24" viewBox="0 0 100 100">
+                                <circle class="text-slate-100 dark:text-slate-800 stroke-current" stroke-width="9" cx="50" cy="50" r="40" fill="transparent"></circle>
+                                <circle id="progress-ring-circle" class="text-emeraldBrand-500 progress-ring__circle stroke-current" stroke-width="9" stroke-linecap="round" cx="50" cy="50" r="40" fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+                            </svg>
+                            <span id="completion-percent" class="absolute font-extrabold text-lg text-slate-900 dark:text-white">0%</span>
+                        </div>
+
+                        <div class="flex-1 grid grid-cols-3 gap-2 text-center">
+                            <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70">
+                                <span id="stat-total" class="block font-extrabold text-lg text-slate-900 dark:text-white">0</span>
+                                <span data-i18n="statTotalLabel" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">الكل</span>
+                            </div>
+                            <div class="p-2.5 rounded-2xl bg-emeraldBrand-500/10">
+                                <span id="stat-completed" class="block font-extrabold text-lg text-emeraldBrand-600 dark:text-emeraldBrand-400">0</span>
+                                <span data-i18n="statCompletedLabel" class="text-[11px] text-emeraldBrand-700 dark:text-emeraldBrand-300 font-medium">مكتملة</span>
+                            </div>
+                            <div class="p-2.5 rounded-2xl bg-amber-500/10">
+                                <span id="stat-pending" class="block font-extrabold text-lg text-amber-600 dark:text-amber-400">0</span>
+                                <span data-i18n="statPendingLabel" class="text-[11px] text-amber-700 dark:text-amber-300 font-medium">قيد التنفيذ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Linear Progress Bar Backup/Accent -->
+                    <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div id="linear-progress-bar" class="h-full bg-gradient-to-r from-primary-500 to-emeraldBrand-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Built-in Pomodoro Focus Timer -->
+                <section class="bg-gradient-to-br from-slate-900 via-slate-900 to-primary-950 text-white rounded-3xl p-6 border border-slate-800 shadow-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="timer" class="w-5 h-5 text-primary-400"></i>
+                            <h2 data-i18n="pomoTitle" class="font-bold text-base">مؤقت التركيز (Pomodoro)</h2>
+                        </div>
+                        <span id="pomo-status-pill" data-i18n="pomoReady" class="px-2.5 py-0.5 rounded-full bg-white/10 text-xs font-semibold text-primary-300">جاهز</span>
+                    </div>
+
+                    <!-- Mode Switcher (25m Focus / 5m Break) -->
+                    <div class="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-950/70 border border-slate-800 mb-5">
+                        <button id="btn-mode-focus" onclick="setPomodoroMode('focus')" data-i18n="pomoFocusBtn" class="py-2 rounded-xl text-xs font-bold bg-primary-600 text-white transition-all">
+                            تركيز (25 د)
+                        </button>
+                        <button id="btn-mode-break" onclick="setPomodoroMode('break')" data-i18n="pomoBreakBtn" class="py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">
+                            استراحة (5 د)
+                        </button>
+                    </div>
+
+                    <!-- Countdown Display -->
+                    <div class="text-center py-2">
+                        <div id="pomo-display" dir="ltr" class="font-extrabold text-5xl tracking-wider tabular-nums text-white">
+                            25:00
+                        </div>
+                    </div>
+
+                    <!-- Timer Controls -->
+                    <div class="flex items-center justify-center gap-3 mt-5">
+                        <button id="pomo-start-btn" onclick="togglePomodoro()" class="flex-1 py-2.5 px-4 rounded-2xl bg-emeraldBrand-500 hover:bg-emeraldBrand-600 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-95">
+                            <i id="pomo-play-icon" data-lucide="play" class="w-4 h-4"></i>
+                            <span id="pomo-start-label" data-i18n="pomoStart">بدء الجلسة</span>
+                        </button>
+                        <button onclick="resetPomodoro()" aria-label="Reset Timer" class="p-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all active:scale-95">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 3. Category Quick Filter Card -->
+                <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                    <h3 data-i18n="catFilterTitle" class="font-bold text-sm text-slate-900 dark:text-white mb-3">تصفية حسب التصنيف</h3>
+                    <div id="category-pills" class="flex flex-wrap gap-2">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </section>
+
+            </aside>
+
+            <!-- ==================== RIGHT / MAIN COLUMN: TASK CREATOR & LIST ==================== -->
+            <div class="lg:col-span-8 space-y-6">
+
+                <!-- 1. Add New Task Form Card -->
+                <section class="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                    <form id="add-task-form" onsubmit="handleAddTask(event)" class="space-y-4">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="relative flex-1">
+                                <input 
+                                    type="text" 
+                                    id="task-title-input" 
+                                    required 
+                                    placeholder="أضف مهمة جديدة... (مثال: تسليم عرض مشروع مستقل)"
+                                    class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-primary-500 text-sm sm:text-base font-medium"
+                                >
+                            </div>
+                            <button type="submit" class="px-6 py-3.5 rounded-2xl bg-primary-600 hover:bg-primary-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-primary-600/20 flex items-center justify-center gap-2 transition-all active:scale-95 shrink-0">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                                <span data-i18n="addTaskBtn">إضافة مهمة</span>
+                            </button>
+                        </div>
+
+                        <!-- Task Metadata Controls: Category, Priority, Due Date -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                            <!-- Category Selector -->
+                            <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <i data-lucide="tag" class="w-4 h-4 text-primary-500 shrink-0"></i>
+                                <select id="task-category-input" class="w-full bg-transparent text-xs sm:text-sm font-semibold focus:outline-none text-slate-700 dark:text-slate-200">
+                                    <option value="work" data-i18n="catWork">العمل</option>
+                                    <option value="study" data-i18n="catStudy">الدراسة</option>
+                                    <option value="freelance" data-i18n="catFreelance">العمل الحر</option>
+                                    <option value="personal" data-i18n="catPersonal">شخصي</option>
+                                </select>
+                            </div>
+
+                            <!-- Priority Selector -->
+                            <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <i data-lucide="flag" class="w-4 h-4 text-rose-500 shrink-0"></i>
+                                <select id="task-priority-input" class="w-full bg-transparent text-xs sm:text-sm font-semibold focus:outline-none text-slate-700 dark:text-slate-200">
+                                    <option value="high" data-i18n="prioHigh">أولوية عالية</option>
+                                    <option value="medium" selected data-i18n="prioMedium">أولوية متوسطة</option>
+                                    <option value="low" data-i18n="prioLow">أولوية منخفضة</option>
+                                </select>
+                            </div>
+
+                            <!-- Due Date Input -->
+                            <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                                <i data-lucide="calendar" class="w-4 h-4 text-emeraldBrand-500 shrink-0"></i>
+                                <input type="date" id="task-date-input" class="w-full bg-transparent text-xs sm:text-sm font-semibold focus:outline-none text-slate-700 dark:text-slate-200">
+                            </div>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- 2. Search Bar, Status Filter Tabs & Clear Completed -->
+                <section class="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <!-- Search Input -->
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 start-3.5"></i>
+                            <input 
+                                type="text" 
+                                id="search-input" 
+                                oninput="handleSearch(this.value)"
+                                placeholder="ابحث في مهامك..."
+                                class="w-full ps-10 pe-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-primary-500 text-xs sm:text-sm"
+                            >
+                        </div>
+
+                        <!-- Clear Completed Button -->
+                        <button id="clear-completed-btn" onclick="clearCompletedTasks()" class="px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 disabled:opacity-40 disabled:pointer-events-none">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            <span data-i18n="clearCompletedBtn">حذف المهام المكتملة</span>
+                        </button>
+                    </div>
+
+                    <!-- Status Filter Tabs -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                        <button onclick="setStatusFilter('all')" data-status="all" data-i18n="tabAll" class="status-tab active px-4 py-2 rounded-xl text-xs font-bold bg-primary-600 text-white shrink-0 transition-all">
+                            الكل
+                        </button>
+                        <button onclick="setStatusFilter('active')" data-status="active" data-i18n="tabActive" class="status-tab px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 shrink-0 transition-all">
+                            قيد التنفيذ
+                        </button>
+                        <button onclick="setStatusFilter('completed')" data-status="completed" data-i18n="tabCompleted" class="status-tab px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 shrink-0 transition-all">
+                            المكتملة
+                        </button>
+                        <button onclick="setStatusFilter('high')" data-status="high" data-i18n="tabHigh" class="status-tab px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 shrink-0 transition-all">
+                            أولوية عالية 🔥
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 3. Interactive Task List Container -->
+                <section aria-label="Task List" class="space-y-3">
+                    <div class="flex items-center justify-between px-1">
+                        <span id="visible-count-label" class="text-xs font-semibold text-slate-500 dark:text-slate-400"></span>
+                        <span data-i18n="dragHint" class="text-[11px] text-slate-400 hidden sm:inline">اسحب المهام أو استخدم الأسهم لإعادة الترتيب</span>
+                    </div>
+
+                    <div id="tasks-container" class="space-y-3">
+                        <!-- Task Cards Injected Dynamically -->
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== TOAST NOTIFICATION ==================== -->
+    <div id="toast" class="fixed bottom-6 end-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-5 py-3 rounded-2xl shadow-xl border border-primary-500/40 flex items-center gap-2.5">
+        <i data-lucide="sparkles" class="w-4 h-4 text-emeraldBrand-400 dark:text-emeraldBrand-600"></i>
+        <span id="toast-message" class="text-xs sm:text-sm font-bold">تم الحفظ</span>
+    </div>
+
+    <!-- ==================== APPLICATION LOGIC ==================== -->
+    <script>
+        // Storage Keys
+        const STORAGE_TASKS_KEY = 'taskflow_pro_tasks_v1';
+        const STORAGE_LANG_KEY = 'taskflow_pro_lang_v1';
+        const STORAGE_THEME_KEY = 'taskflow_pro_theme_v1';
+
+        // Application State
+        let tasks = [];
+        let currentLang = localStorage.getItem(STORAGE_LANG_KEY) || 'ar';
+        let currentTheme = localStorage.getItem(STORAGE_THEME_KEY) || 'dark';
+        let statusFilter = 'all';
+        let categoryFilter = 'all';
+        let searchQuery = '';
+        let editingTaskId = null;
+        let draggedTaskId = null;
+
+        // Pomodoro State
+        let pomoMode = 'focus'; // 'focus' (25m) | 'break' (5m)
+        let pomoSecondsLeft = 25 * 60;
+        let pomoInterval = null;
+        let pomoRunning = false;
+
+        // Translations Dictionary
+        const i18n = {
+            ar: {
+                appTitle: "إنجاز",
+                statsTitle: "مؤشر الإنجاز اليومي",
+                statsSub: "تتبع تقدمك لحظة بلحظة",
+                statTotalLabel: "الكل",
+                statCompletedLabel: "مكتملة",
+                statPendingLabel: "قيد التنفيذ",
+                pomoTitle: "مؤقت التركيز (Pomodoro)",
+                pomoReady: "جاهز",
+                pomoRunning: "قيد التركيز...",
+                pomoPaused: "متوقف مؤقتاً",
+                pomoFocusBtn: "تركيز (25 د)",
+                pomoBreakBtn: "استراحة (5 د)",
+                pomoStart: "بدء الجلسة",
+                pomoPause: "إيقاف مؤقت",
+                catFilterTitle: "تصفية حسب التصنيف",
+                addTaskBtn: "إضافة مهمة",
+                inputPlaceholder: "أضف مهمة جديدة... (مثال: تسليم عرض مشروع مستقل)",
+                searchPlaceholder: "ابحث في مهامك...",
+                clearCompletedBtn: "حذف المهام المكتملة",
+                tabAll: "الكل",
+                tabActive: "قيد التنفيذ",
+                tabCompleted: "المكتملة",
+                tabHigh: "أولوية عالية 🔥",
+                dragHint: "اسحب المهام أو استخدم الأسهم لإعادة الترتيب",
+                catAll: "جميع التصنيفات",
+                catWork: "العمل",
+                catStudy: "الدراسة",
+                catFreelance: "العمل الحر",
+                catPersonal: "شخصي",
+                prioHigh: "عالية",
+                prioMedium: "متوسطة",
+                prioLow: "منخفضة",
+                emptyTitle: "لا توجد مهام مطابقة حالياً",
+                emptySub: "أضف مهمة جديدة من الأعلى أو قم بتغيير خيارات التصفية.",
+                overdueLabel: "متأخرة",
+                todayLabel: "اليوم",
+                toastAdded: "تمت إضافة المهمة بنجاح",
+                toastUpdated: "تم تحديث المهمة",
+                toastDeleted: "تم حذف المهمة",
+                toastCleared: "تم مسح المهام المكتملة",
+                toastPomoDone: "انتهت جلسة المؤقت! أحسنت صنعاً 🎉",
+                motivStart: "🚀 بداية قوية",
+                motivHalf: "🔥 في منتصف الطريق",
+                motivAlmost: "⚡ أوشكت على الإنجاز",
+                motivDone: "🏆 إنجاز كامل 100%"
+            },
+            en: {
+                appTitle: "TaskFlow",
+                statsTitle: "Daily Progress",
+                statsSub: "Real-time productivity metrics",
+                statTotalLabel: "Total",
+                statCompletedLabel: "Done",
+                statPendingLabel: "Pending",
+                pomoTitle: "Pomodoro Focus Timer",
+                pomoReady: "Ready",
+                pomoRunning: "Focusing...",
+                pomoPaused: "Paused",
+                pomoFocusBtn: "Focus (25m)",
+                pomoBreakBtn: "Break (5m)",
+                pomoStart: "Start Session",
+                pomoPause: "Pause",
+                catFilterTitle: "Filter by Category",
+                addTaskBtn: "Add Task",
+                inputPlaceholder: "Add a new task... (e.g., Submit freelance proposal)",
+                searchPlaceholder: "Search your tasks...",
+                clearCompletedBtn: "Clear Completed",
+                tabAll: "All",
+                tabActive: "Active",
+                tabCompleted: "Completed",
+                tabHigh: "High Priority 🔥",
+                dragHint: "Drag cards or use arrows to reorder tasks",
+                catAll: "All Categories",
+                catWork: "Work",
+                catStudy: "Study",
+                catFreelance: "Freelance",
+                catPersonal: "Personal",
+                prioHigh: "High",
+                prioMedium: "Medium",
+                prioLow: "Low",
+                emptyTitle: "No matching tasks found",
+                emptySub: "Create a new task above or adjust your active filters.",
+                overdueLabel: "Overdue",
+                todayLabel: "Today",
+                toastAdded: "Task added successfully",
+                toastUpdated: "Task updated",
+                toastDeleted: "Task removed",
+                toastCleared: "Completed tasks cleared",
+                toastPomoDone: "Timer session finished! Great job 🎉",
+                motivStart: "🚀 Strong Start",
+                motivHalf: "🔥 Halfway There",
+                motivAlmost: "⚡ Almost Done",
+                motivDone: "🏆 100% Accomplished"
+            }
+        };
+
+        // Get Today's ISO Date String (YYYY-MM-DD)
+        function getTodayStr(offsetDays = 0) {
+            const d = new Date();
+            d.setDate(d.getDate() + offsetDays);
+            return d.toISOString().split('T')[0];
+        }
+
+        // Pre-loaded Realistic Sample Tasks on First Visit
+        function getDefaultSampleTasks() {
+            return [
+                {
+                    id: 101,
+                    title: currentLang === 'ar' 
+                        ? "تقديم عرض احترافي لمشروع موقع مكتب المحاماة على مستقل" 
+                        : "Submit tailored proposal for Law Firm bilingual website on Mostaql",
+                    category: "freelance",
+                    priority: "high",
+                    dueDate: getTodayStr(0),
+                    completed: false
+                },
+                {
+                    id: 102,
+                    title: currentLang === 'ar' 
+                        ? "مراجعة خوارزميات تعلم الآلة وتحليل البيانات بلغة بايثون" 
+                        : "Review Machine Learning algorithms & Python Pandas data pipelines",
+                    category: "study",
+                    priority: "high",
+                    dueDate: getTodayStr(1),
+                    completed: false
+                },
+                {
+                    id: 103,
+                    title: currentLang === 'ar' 
+                        ? "تحديث معرض الأعمال (Portfolio) وإضافة مشروع متجر الحلويات" 
+                        : "Update developer portfolio with the Sugar Memory Bakery storefront",
+                    category: "work",
+                    priority: "medium",
+                    dueDate: getTodayStr(2),
+                    completed: true
+                },
+                {
+                    id: 104,
+                    title: currentLang === 'ar' 
+                        ? "جلسة قراءة وتخطيط الأهداف الأسبوعية مع كوب قهوة" 
+                        : "Weekly goal planning & reading session with morning coffee",
+                    category: "personal",
+                    priority: "low",
+                    dueDate: getTodayStr(3),
+                    completed: false
+                }
+            ];
+        }
+
+        // Load Tasks from localStorage
+        function loadTasks() {
+            const saved = localStorage.getItem(STORAGE_TASKS_KEY);
+            if (saved) {
+                try {
+                    tasks = JSON.parse(saved);
+                } catch (e) {
+                    tasks = getDefaultSampleTasks();
+                }
+            } else {
+                tasks = getDefaultSampleTasks();
+                saveTasks();
+            }
+        }
+
+        // Save Tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(tasks));
+        }
+
+        // Apply Theme & Language Preferences
+        function applyPreferences() {
+            // Theme
+            if (currentTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            // Direction & Language
+            document.documentElement.setAttribute('lang', currentLang);
+            document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+            document.getElementById('lang-btn-text').textContent = currentLang === 'ar' ? 'English' : 'العربية';
+
+            // Translate static data-i18n elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang][key]) {
+                    el.textContent = i18n[currentLang][key];
+                }
+            });
+
+            // Translate Placeholders
+            document.getElementById('task-title-input').placeholder = i18n[currentLang].inputPlaceholder;
+            document.getElementById('search-input').placeholder = i18n[currentLang].searchPlaceholder;
+
+            // Formatted Header Date
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date-display').textContent = new Date().toLocaleDateString(
+                currentLang === 'ar' ? 'ar-EG' : 'en-US',
+                dateOptions
+            );
+
+            renderCategoryPills();
+            renderTasks();
+            updateStatsDashboard();
+            lucide.createIcons();
+        }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem(STORAGE_THEME_KEY, currentTheme);
+            applyPreferences();
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            localStorage.setItem(STORAGE_LANG_KEY, currentLang);
+            applyPreferences();
+        }
+
+        // Add New Task
+        function handleAddTask(e) {
+            e.preventDefault();
+            const titleInput = document.getElementById('task-title-input');
+            const categoryInput = document.getElementById('task-category-input');
+            const priorityInput = document.getElementById('task-priority-input');
+            const dateInput = document.getElementById('task-date-input');
+
+            const title = titleInput.value.trim();
+            if (!title) return;
+
+            const newTask = {
+                id: Date.now(),
+                title: title,
+                category: categoryInput.value,
+                priority: priorityInput.value,
+                dueDate: dateInput.value || getTodayStr(0),
+                completed: false
+            };
+
+            tasks.unshift(newTask);
+            saveTasks();
+            titleInput.value = '';
+            renderTasks();
+            updateStatsDashboard();
+            showToast(i18n[currentLang].toastAdded);
+        }
+
+        // Toggle Complete / Uncomplete
+        function toggleTaskCompletion(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+            task.completed = !task.completed;
+            saveTasks();
+            renderTasks();
+            updateStatsDashboard();
+        }
+
+        // Delete Single Task
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            renderTasks();
+            updateStatsDashboard();
+            showToast(i18n[currentLang].toastDeleted);
+        }
+
+        // Clear All Completed Tasks
+        function clearCompletedTasks() {
+            const hasCompleted = tasks.some(t => t.completed);
+            if (!hasCompleted) return;
+            tasks = tasks.filter(t => !t.completed);
+            saveTasks();
+            renderTasks();
+            updateStatsDashboard();
+            showToast(i18n[currentLang].toastCleared);
+        }
+
+        // Inline Edit Handlers
+        function startEditTask(id) {
+            editingTaskId = id;
+            renderTasks();
+            const input = document.getElementById(`edit-input-${id}`);
+            if (input) {
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
+            }
+        }
+
+        function saveEditTask(id) {
+            const input = document.getElementById(`edit-input-${id}`);
+            if (!input) return;
+            const updatedTitle = input.value.trim();
+            if (updatedTitle) {
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    task.title = updatedTitle;
+                    saveTasks();
+                    showToast(i18n[currentLang].toastUpdated);
+                }
+            }
+            editingTaskId = null;
+            renderTasks();
+        }
+
+        function cancelEditTask() {
+            editingTaskId = null;
+            renderTasks();
+        }
+
+        // Up / Down Reordering (Accessible on Mobile & Desktop)
+        function moveTask(id, direction) {
+            const index = tasks.findIndex(t => t.id === id);
+            if (index === -1) return;
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= tasks.length) return;
+
+            const [movedItem] = tasks.splice(index, 1);
+            tasks.splice(targetIndex, 0, movedItem);
+            saveTasks();
+            renderTasks();
+        }
+
+        // Drag & Drop Reordering
+        function handleDragStart(e, id) {
+            draggedTaskId = id;
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            draggedTaskId = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e, targetId) {
+            e.preventDefault();
+            if (!draggedTaskId || draggedTaskId === targetId) return;
+
+            const fromIndex = tasks.findIndex(t => t.id === draggedTaskId);
+            const toIndex = tasks.findIndex(t => t.id === targetId);
+            if (fromIndex === -1 || toIndex === -1) return;
+
+            const [moved] = tasks.splice(fromIndex, 1);
+            tasks.splice(toIndex, 0, moved);
+            saveTasks();
+            renderTasks();
+        }
+
+        // Filters & Search
+        function setStatusFilter(status) {
+            statusFilter = status;
+            document.querySelectorAll('.status-tab').forEach(btn => {
+                if (btn.dataset.status === status) {
+                    btn.classList.add('bg-primary-600', 'text-white');
+                    btn.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
+                } else {
+                    btn.classList.remove('bg-primary-600', 'text-white');
+                    btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
+                }
+            });
+            renderTasks();
+        }
+
+        function setCategoryFilter(cat) {
+            categoryFilter = cat;
+            renderCategoryPills();
+            renderTasks();
+        }
+
+        function handleSearch(val) {
+            searchQuery = val.toLowerCase().trim();
+            renderTasks();
+        }
+
+        // Render Category Sidebar Pills
+        function renderCategoryPills() {
+            const container = document.getElementById('category-pills');
+            const categories = [
+                { id: 'all', label: i18n[currentLang].catAll, dot: 'bg-slate-400' },
+                { id: 'work', label: i18n[currentLang].catWork, dot: 'bg-blue-500' },
+                { id: 'study', label: i18n[currentLang].catStudy, dot: 'bg-purple-500' },
+                { id: 'freelance', label: i18n[currentLang].catFreelance, dot: 'bg-emerald-500' },
+                { id: 'personal', label: i18n[currentLang].catPersonal, dot: 'bg-amber-500' }
+            ];
+
+            container.innerHTML = categories.map(cat => {
+                const count = cat.id === 'all' ? tasks.length : tasks.filter(t => t.category === cat.id).length;
+                const isActive = categoryFilter === cat.id;
+                return `
+                    <button onclick="setCategoryFilter('${cat.id}')" class="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${
+                        isActive 
+                        ? 'bg-primary-600 text-white border-primary-600 shadow-xs' 
+                        : 'bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-primary-500'
+                    }">
+                        <span class="w-2 h-2 rounded-full ${isActive ? 'bg-white' : cat.dot}"></span>
+                        <span>${cat.label}</span>
+                        <span class="px-1.5 py-0.2 rounded-md text-[10px] ${isActive ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">${count}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Helper: Category Badge Styling
+        function getCategoryBadge(cat) {
+            const map = {
+                work: { label: i18n[currentLang].catWork, cls: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+                study: { label: i18n[currentLang].catStudy, cls: 'bg-purple-500/10 text-purple-600 dark:text-purple-400' },
+                freelance: { label: i18n[currentLang].catFreelance, cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
+                personal: { label: i18n[currentLang].catPersonal, cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' }
+            };
+            return map[cat] || map.work;
+        }
+
+        // Helper: Priority Badge Styling
+        function getPriorityBadge(prio) {
+            const map = {
+                high: { label: i18n[currentLang].prioHigh, cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' },
+                medium: { label: i18n[currentLang].prioMedium, cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+                low: { label: i18n[currentLang].prioLow, cls: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20' }
+            };
+            return map[prio] || map.medium;
+        }
+
+        // Helper: Format Due Date Badge
+        function formatDueDate(dateStr, isCompleted) {
+            if (!dateStr) return '';
+            const today = getTodayStr(0);
+            let label = dateStr;
+            let colorClass = 'text-slate-500 dark:text-slate-400';
+
+            if (dateStr === today) {
+                label = i18n[currentLang].todayLabel;
+                colorClass = 'text-primary-600 dark:text-primary-400 font-bold';
+            } else if (dateStr < today && !isCompleted) {
+                label = `${i18n[currentLang].overdueLabel} (${dateStr})`;
+                colorClass = 'text-rose-600 dark:text-rose-400 font-bold';
+            }
+
+            return `
+                <span class="inline-flex items-center gap-1 text-[11px] ${colorClass}">
+                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                    <span>${label}</span>
+                </span>
+            `;
+        }
+
+        // Render Filtered Task List
+        function renderTasks() {
+            const container = document.getElementById('tasks-container');
+            
+            const filtered = tasks.filter(task => {
+                // Status Filter
+                if (statusFilter === 'active' && task.completed) return false;
+                if (statusFilter === 'completed' && !task.completed) return false;
+                if (statusFilter === 'high' && task.priority !== 'high') return false;
+
+                // Category Filter
+                if (categoryFilter !== 'all' && task.category !== categoryFilter) return false;
+
+                // Search Filter
+                if (searchQuery && !task.title.toLowerCase().includes(searchQuery)) return false;
+
+                return true;
+            });
+
+            // Update Visible Count Label
+            document.getElementById('visible-count-label').textContent = currentLang === 'ar'
+                ? `عرض ${filtered.length} من أصل ${tasks.length} مهام`
+                : `Showing ${filtered.length} of ${tasks.length} tasks`;
+
+            // Enable/Disable Clear Completed Button
+            document.getElementById('clear-completed-btn').disabled = !tasks.some(t => t.completed);
+            renderCategoryPills();
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 rounded-3xl p-10 border border-slate-200/80 dark:border-slate-800 text-center space-y-3">
+                        <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
+                            <i data-lucide="clipboard-list" class="w-7 h-7"></i>
+                        </div>
+                        <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white">${i18n[currentLang].emptyTitle}</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">${i18n[currentLang].emptySub}</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = filtered.map(task => {
+                const catBadge = getCategoryBadge(task.category);
+                const prioBadge = getPriorityBadge(task.priority);
+                const isEditing = editingTaskId === task.id;
+
+                return `
+                    <div 
+                        draggable="${!isEditing}"
+                        ondragstart="handleDragStart(event, ${task.id})"
+                        ondragend="handleDragEnd(event)"
+                        ondragover="handleDragOver(event)"
+                        ondrop="handleDrop(event, ${task.id})"
+                        class="task-card group bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border transition-all duration-200 flex items-start sm:items-center gap-3.5 shadow-xs hover:shadow-md ${
+                            task.completed 
+                            ? 'border-slate-200/60 dark:border-slate-800/60 opacity-75' 
+                            : 'border-slate-200/90 dark:border-slate-800 hover:border-primary-500/50'
+                        }"
+                    >
+                        <!-- Drag Handle (Desktop) -->
+                        <div class="hidden sm:flex text-slate-300 dark:text-slate-700 cursor-grab active:cursor-grabbing pt-1 sm:pt-0">
+                            <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+                        </div>
+
+                        <!-- Custom Animated Checkbox -->
+                        <button 
+                            onclick="toggleTaskCompletion(${task.id})" 
+                            aria-label="Toggle Complete"
+                            class="w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 transition-all ${
+                                task.completed 
+                                ? 'bg-emeraldBrand-500 border-emeraldBrand-500 text-white scale-105' 
+                                : 'border-slate-300 dark:border-slate-600 hover:border-primary-500'
+                            }"
+                        >
+                            ${task.completed ? '<i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>' : ''}
+                        </button>
+
+                        <!-- Task Content / Inline Edit -->
+                        <div class="flex-1 min-w-0">
+                            ${isEditing ? `
+                                <div class="flex items-center gap-2">
+                                    <input 
+                                        type="text" 
+                                        id="edit-input-${task.id}" 
+                                        value="${task.title.replace(/"/g, '&quot;')}"
+                                        onkeydown="if(event.key==='Enter') saveEditTask(${task.id}); if(event.key==='Escape') cancelEditTask();"
+                                        class="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-primary-500 text-sm font-semibold focus:outline-none"
+                                    >
+                                    <button onclick="saveEditTask(${task.id})" class="p-1.5 rounded-lg bg-emeraldBrand-500 text-white hover:bg-emeraldBrand-600">
+                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="cancelEditTask()" class="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            ` : `
+                                <p ondblclick="startEditTask(${task.id})" class="text-sm sm:text-base font-semibold break-words transition-all ${
+                                    task.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-slate-100'
+                                }">
+                                    ${task.title}
+                                </p>
+                                <div class="flex flex-wrap items-center gap-2 mt-2">
+                                    <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold ${catBadge.cls}">
+                                        ${catBadge.label}
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold border ${prioBadge.cls}">
+                                        ${prioBadge.label}
+                                    </span>
+                                    ${formatDueDate(task.dueDate, task.completed)}
+                                </div>
+                            `}
+                        </div>
+
+                        <!-- Action Buttons: Reorder Up/Down, Edit, Delete -->
+                        ${!isEditing ? `
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button onclick="moveTask(${task.id}, -1)" title="Move Up" class="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="moveTask(${task.id}, 1)" title="Move Down" class="p-1.5 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="startEditTask(${task.id})" title="Edit" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteTask(${task.id})" title="Delete" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // Update Live Productivity Ring & Stats
+        function updateStatsDashboard() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = total - completed;
+            const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('completion-percent').textContent = `${percent}%`;
+            document.getElementById('linear-progress-bar').style.width = `${percent}%`;
+
+            // SVG Ring Calculation (r = 40 -> circumference = 2 * PI * 40 ≈ 251.2)
+            const circumference = 251.2;
+            const offset = circumference - (percent / 100) * circumference;
+            document.getElementById('progress-ring-circle').style.strokeDashoffset = offset;
+
+            // Update Motivational Badge
+            const badge = document.getElementById('motivation-badge');
+            if (percent === 100 && total > 0) {
+                badge.textContent = i18n[currentLang].motivDone;
+            } else if (percent >= 70) {
+                badge.textContent = i18n[currentLang].motivAlmost;
+            } else if (percent >= 40) {
+                badge.textContent = i18n[currentLang].motivHalf;
+            } else {
+                badge.textContent = i18n[currentLang].motivStart;
+            }
+        }
+
+        // ==================== POMODORO TIMER LOGIC ====================
+        function updatePomodoroDisplay() {
+            const mins = Math.floor(pomoSecondsLeft / 60).toString().padStart(2, '0');
+            const secs = (pomoSecondsLeft % 60).toString().padStart(2, '0');
+            document.getElementById('pomo-display').textContent = `${mins}:${secs}`;
+        }
+
+        function setPomodoroMode(mode) {
+            clearInterval(pomoInterval);
+            pomoRunning = false;
+            pomoMode = mode;
+            pomoSecondsLeft = mode === 'focus' ? 25 * 60 : 5 * 60;
+
+            const focusBtn = document.getElementById('btn-mode-focus');
+            const breakBtn = document.getElementById('btn-mode-break');
+            if (mode === 'focus') {
+                focusBtn.className = 'py-2 rounded-xl text-xs font-bold bg-primary-600 text-white transition-all';
+                breakBtn.className = 'py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all';
+            } else {
+                breakBtn.className = 'py-2 rounded-xl text-xs font-bold bg-emeraldBrand-600 text-white transition-all';
+                focusBtn.className = 'py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all';
+            }
+
+            document.getElementById('pomo-start-label').textContent = i18n[currentLang].pomoStart;
+            document.getElementById('pomo-status-pill').textContent = i18n[currentLang].pomoReady;
+            updatePomodoroDisplay();
+        }
+
+        function togglePomodoro() {
+            const label = document.getElementById('pomo-start-label');
+            const pill = document.getElementById('pomo-status-pill');
+
+            if (pomoRunning) {
+                clearInterval(pomoInterval);
+                pomoRunning = false;
+                label.textContent = i18n[currentLang].pomoStart;
+                pill.textContent = i18n[currentLang].pomoPaused;
+            } else {
+                pomoRunning = true;
+                label.textContent = i18n[currentLang].pomoPause;
+                pill.textContent = i18n[currentLang].pomoRunning;
+
+                pomoInterval = setInterval(() => {
+                    if (pomoSecondsLeft > 0) {
+                        pomoSecondsLeft--;
+                        updatePomodoroDisplay();
+                    } else {
+                        clearInterval(pomoInterval);
+                        pomoRunning = false;
+                        label.textContent = i18n[currentLang].pomoStart;
+                        pill.textContent = i18n[currentLang].pomoReady;
+                        showToast(i18n[currentLang].toastPomoDone);
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetPomodoro() {
+            setPomodoroMode(pomoMode);
+        }
+
+        // Toast Helper
+        let toastTimer;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 2600);
+        }
+
+        // Initialize App on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('task-date-input').value = getTodayStr(0);
+            loadTasks();
+            applyPreferences();
+            updatePomodoroDisplay();
+        });
+    </script>
+</body>
+</html>
